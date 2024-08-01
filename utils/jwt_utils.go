@@ -1,26 +1,46 @@
 package utils
 
 import (
-	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
-func GenerateToken(userID uint32) (string, error) {
-	claims := jwt.MapClaims{}
-	claims["authorized"] = true
-	claims["user_id"] = userID
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expires after 24 hours
+var jwtKey = []byte("your_secret_key")
+
+type Claims struct {
+	UserID uuid.UUID `json:"user_id"`
+	jwt.StandardClaims
+}
+
+func GenerateToken(userID uuid.UUID) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		UserID: userID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func ValidateToken(tokenString string) (*jwt.Token, error) {
-	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrSignatureInvalid
-		}
-		return []byte(os.Getenv("JWT_SECRET")), nil
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }
