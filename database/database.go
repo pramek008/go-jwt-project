@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/pramek008/go-jwt-project/models"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -27,16 +29,27 @@ func ConnectDb() {
 		os.Getenv("DB_PORT"),
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
+	var err error
+	var db *gorm.DB
+
+	retries := 5
+	for i := 0; i < retries; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
+		if err == nil {
+			break
+		}
+		log.Printf("Failed to connect to database. Retrying in 5 seconds... (%d/%d)\n", i+1, retries)
+		time.Sleep(5 * time.Second)
+	}
 
 	if err != nil {
-		log.Fatal("Failed to connect to database. \n", err)
+		log.Fatal("Failed to connect to database after multiple retries. \n", err)
 		os.Exit(2)
 	}
 
-	log.Println("connected to database")
+	log.Println("Connected to database")
 	db.Logger = logger.Default.LogMode(logger.Info)
 
 	log.Println("Running Migrations")
@@ -47,7 +60,59 @@ func ConnectDb() {
 	}
 	log.Println("Migrations completed")
 
+	// Run seeder
+	if err := seedData(db); err != nil {
+		log.Fatalf("Failed to seed data. Error: %v\n", err)
+		os.Exit(2)
+	}
+
 	DB = Dbinstance{
 		Db: db,
 	}
+}
+
+func seedData(db *gorm.DB) error {
+	// Check if data already exists
+	var userCount int64
+	db.Model(&models.User{}).Count(&userCount)
+	if userCount > 0 {
+		log.Println("Data already seeded")
+		return nil
+	}
+
+	// Create sample users
+	users := []models.User{
+		{Nickname: "user1", Email: "user1@example.com", Password: hashPassword("password1")},
+		{Nickname: "user2", Email: "user2@example.com", Password: hashPassword("password2")},
+	}
+
+	for _, user := range users {
+		if err := db.Create(&user).Error; err != nil {
+			return err
+		}
+	}
+
+	// Create sample posts
+	posts := []models.Post{
+		{Title: "First Post", Content: "This is the content of the first post", UserID: 1},
+		{Title: "Second Post", Content: "This is the content of the second post", UserID: 2},
+		{Title: "Another Post", Content: "This is another post by user 1", UserID: 1},
+	}
+
+	for _, post := range posts {
+		if err := db.Create(&post).Error; err != nil {
+			return err
+		}
+	}
+
+	log.Println("Data seeded successfully")
+	return nil
+}
+
+func hashPassword(password string) string {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Failed to hash password. Error: %v\n", err)
+	}
+	return string(hashedPassword)
 }

@@ -7,12 +7,16 @@ import (
 )
 
 type Post struct {
-	gorm.Model
-	ID        uint32    `gorm:"primary_key;auto_increment" json:"id"`
-	Title     string    `gorm:"size:255;not null;" json:"title"`
-	Content   string    `gorm:"type:text;not null;" json:"content"`
-	UserID    uint32    `gorm:"not null" json:"user_id"`
-	User      User      `gorm:"foreignkey:UserID" json:"user"`
-	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	ID        uint           `gorm:"primaryKey"`
+	Title     string         `gorm:"size:255;not null"`
+	Content   string         `gorm:"type:text;not null"`
+	UserID    uint           `gorm:"not null"`
+	User      User           `gorm:"foreignKey:UserID"`
+	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func (Post) TableName() string {
+	return "posts"
 }
