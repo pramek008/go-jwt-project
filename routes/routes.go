@@ -13,7 +13,8 @@ func SetupRoutes(r *gin.Engine) {
 		// ctx.JSON(200, gin.H{
 		// 	"message": "Hello from the API!",
 		// })
-		utils.SendResponse(ctx, 200, true, "Success", "Hello from the API!")
+		// utils.SendResponse(ctx, 200, true, "Success", "Hello from the API!")
+		utils.SendResponse[map[string]interface{}](ctx, 200, true, "Hello from the API!", nil)
 	})
 
 	// Public routes
