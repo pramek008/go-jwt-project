@@ -13,6 +13,8 @@ services:
     depends_on:
       - pgsql
     command: air run main.go
+    networks:
+      - rest-go-jwt
 
   pgsql:
     image: postgres:alpine
@@ -25,6 +27,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres-db:/var/lib/postgresql/data
+    networks:
+      - rest-go-jwt
 
   cloudbeaver:
     image: dbeaver/cloudbeaver:latest
@@ -36,7 +40,13 @@ services:
       - cloudbeaver:/opt/cloudbeaver/workspace
     depends_on:
       - pgsql
+    networks:
+      - rest-go-jwt
 
 volumes:
   postgres-db:
   cloudbeaver:
+
+networks:
+  rest-go-jwt:
+    driver: bridge
