@@ -4,14 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pramek008/go-jwt-project/controllers"
 	"github.com/pramek008/go-jwt-project/middleware"
+	"github.com/pramek008/go-jwt-project/utils"
 )
 
 func SetupRoutes(r *gin.Engine) {
 
 	r.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"message": "Hello from the API!",
-		})
+		// ctx.JSON(200, gin.H{
+		// 	"message": "Hello from the API!",
+		// })
+		utils.SendResponse(ctx, 200, true, "Success", "Hello from the API!")
 	})
 
 	// Public routes
