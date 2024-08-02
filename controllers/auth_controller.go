@@ -1,3 +1,4 @@
+// controllers/auth.go
 package controllers
 
 import (
@@ -25,7 +26,7 @@ func Register(c *gin.Context) {
 	}
 	user.Password = string(hashedPassword)
 
-	// Generate UUID for the new user
+	// Generate UUID untuk pengguna baru
 	user.ID = uuid.New()
 
 	if err := database.DB.Db.Create(&user).Error; err != nil {
@@ -39,7 +40,6 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// utils.SendResponse(c, http.StatusCreated, true, "User created successfully", user)
 	utils.SendResponse(c, http.StatusCreated, true, "User created successfully", gin.H{
 		"id":        user.ID,
 		"nickname":  user.Nickname,
