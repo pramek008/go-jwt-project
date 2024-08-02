@@ -1,3 +1,4 @@
+// utils/token.go
 package utils
 
 import (
@@ -5,9 +6,11 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"github.com/pramek008/go-jwt-project/database"
+	"github.com/pramek008/go-jwt-project/models"
 )
 
-var jwtKey = []byte("your_secret_key")
+var jwtKey = []byte("p@ssw0rd")
 
 type Claims struct {
 	UserID uuid.UUID `json:"user_id"`
@@ -29,7 +32,32 @@ func GenerateToken(userID uuid.UUID) (string, error) {
 		return "", err
 	}
 
+	// Simpan token ke database dan hapus token lama
+	err = saveTokenToDB(userID, tokenString, expirationTime)
+	if err != nil {
+		return "", err
+	}
+
 	return tokenString, nil
+}
+
+func saveTokenToDB(userID uuid.UUID, tokenString string, expirationTime time.Time) error {
+	db := database.DB.Db
+
+	// Hapus token lama
+	var oldTokens []models.Token
+	db.Where("user_id = ?", userID).Find(&oldTokens)
+	for _, oldToken := range oldTokens {
+		db.Delete(&oldToken)
+	}
+
+	// Simpan token baru
+	newToken := models.Token{
+		Token:     tokenString,
+		UserID:    userID,
+		ExpiredAt: expirationTime,
+	}
+	return db.Create(&newToken).Error
 }
 
 func ValidateToken(tokenString string) (*jwt.Token, error) {
