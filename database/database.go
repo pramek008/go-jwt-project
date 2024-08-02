@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pramek008/go-jwt-project/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -80,29 +81,32 @@ func seedData(db *gorm.DB) error {
 		return nil
 	}
 
-	// Create sample users
+	// Create sample users with UUIDs
 	users := []models.User{
-		{Nickname: "user1", Email: "user1@example.com", Password: hashPassword("password1")},
-		{Nickname: "user2", Email: "user2@example.com", Password: hashPassword("password2")},
+		{ID: uuid.New(), Nickname: "user1", Email: "user1@example.com", Password: hashPassword("password1")},
+		{ID: uuid.New(), Nickname: "user2", Email: "user2@example.com", Password: hashPassword("password2")},
 	}
 
 	for _, user := range users {
 		if err := db.Create(&user).Error; err != nil {
 			return err
 		}
+		log.Printf("Created user: %v", user)
 	}
 
 	// Create sample posts
 	posts := []models.Post{
-		{Title: "First Post", Content: "This is the content of the first post", UserID: 1},
-		{Title: "Second Post", Content: "This is the content of the second post", UserID: 2},
-		{Title: "Another Post", Content: "This is another post by user 1", UserID: 1},
+		{Title: "First Post", Content: "This is the content of the first post", UserID: users[0].ID},
+		{Title: "Second Post", Content: "This is the content of the second post", UserID: users[1].ID},
+		{Title: "Another Post", Content: "This is another post by user 1", UserID: users[0].ID},
 	}
 
 	for _, post := range posts {
 		if err := db.Create(&post).Error; err != nil {
+			log.Printf("Failed to create post: %v, error: %v", post, err)
 			return err
 		}
+		log.Printf("Created post: %v", post)
 	}
 
 	log.Println("Data seeded successfully")
