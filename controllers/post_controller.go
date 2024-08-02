@@ -101,10 +101,12 @@ func ListPosts(c *gin.Context) {
 	database.DB.Db.Preload("User").Offset(offset).Limit(limit).Find(&posts)
 
 	// Send response
-	utils.SendResponse(c, http.StatusOK, true, "Posts fetched successfully", gin.H{
-		"page":  page,
-		"limit": limit,
-		"total": total,
-		"posts": posts,
-	})
+	// utils.SendResponse(c, http.StatusOK, true, "Posts fetched successfully", gin.H{
+	// 	"page":  page,
+	// 	"limit": limit,
+	// 	"total": total,
+	// 	"posts": posts,
+	// })
+
+	utils.SendPaginatedResponse(c, http.StatusOK, true, "Post fetched successfully,", posts, int64(limit), int64(page), total)
 }
