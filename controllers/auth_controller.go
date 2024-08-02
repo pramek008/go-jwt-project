@@ -33,7 +33,20 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	utils.SendResponse(c, http.StatusCreated, true, "User created successfully", user)
+	token, err := utils.GenerateToken(user.ID)
+	if err != nil {
+		utils.SendErrorResponse(c, http.StatusInternalServerError, "Failed to generate token")
+		return
+	}
+
+	// utils.SendResponse(c, http.StatusCreated, true, "User created successfully", user)
+	utils.SendResponse(c, http.StatusCreated, true, "User created successfully", gin.H{
+		"id":        user.ID,
+		"nickname":  user.Nickname,
+		"email":     user.Email,
+		"createdAt": user.CreatedAt,
+		"token":     token,
+	})
 }
 
 func Login(c *gin.Context) {
@@ -60,5 +73,10 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	utils.SendResponse(c, http.StatusOK, true, "Login successful", gin.H{"nickname": foundUser.Nickname, "email": foundUser.Email, "token": token})
+	utils.SendResponse(c, http.StatusOK, true, "Login successful", gin.H{
+		"id":       foundUser.ID,
+		"nickname": foundUser.Nickname,
+		"email":    foundUser.Email,
+		"token":    token,
+	})
 }
