@@ -1,3 +1,4 @@
+// middleware/jwt_middleware.go
 package middleware
 
 import (
@@ -5,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pramek008/go-jwt-project/database"
+	"github.com/pramek008/go-jwt-project/models"
 	"github.com/pramek008/go-jwt-project/utils"
 )
 
@@ -32,6 +35,15 @@ func JWTMiddleware() gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(*utils.Claims); ok && token.Valid {
+			// Periksa apakah token ada di database
+			var storedToken models.Token
+			db := database.DB.Db
+			if err := db.Where("token = ?", parts[1]).First(&storedToken).Error; err != nil {
+				utils.SendErrorResponse(c, http.StatusUnauthorized, "Invalid Token not found")
+				c.Abort()
+				return
+			}
+
 			c.Set("user_id", claims.UserID)
 		} else {
 			utils.SendErrorResponse(c, http.StatusUnauthorized, "Invalid token claims")
