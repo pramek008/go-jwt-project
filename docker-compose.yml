@@ -3,7 +3,7 @@ version: "3.8"
 services:
   goapp:
     build: .
-    container_name: rest_jwt_goapp
+    hostname: post-project-go
     env_file:
       - .env
     ports:
@@ -15,6 +15,7 @@ services:
     command: air run main.go
     networks:
       - rest-go-jwt
+      - main_network
 
   pgsql:
     image: postgres:alpine
@@ -30,23 +31,25 @@ services:
     networks:
       - rest-go-jwt
 
-  cloudbeaver:
-    image: dbeaver/cloudbeaver:latest
-    container_name: cloudbeaver
-    restart: always
-    ports:
-      - "8978:8978"
-    volumes:
-      - cloudbeaver:/opt/cloudbeaver/workspace
-    depends_on:
-      - pgsql
-    networks:
-      - rest-go-jwt
+#  cloudbeaver:
+#    image: dbeaver/cloudbeaver:latest
+#    container_name: cloudbeaver
+#    restart: always
+#    ports:
+#      - "8978:8978"
+#    volumes:
+#      - cloudbeaver:/opt/cloudbeaver/workspace
+#    depends_on:
+#      - pgsql
+#    networks:
+#      - rest-go-jwt
 
 volumes:
   postgres-db:
-  cloudbeaver:
+#  cloudbeaver:
 
 networks:
   rest-go-jwt:
     driver: bridge
+  main_network:
+    external: true
