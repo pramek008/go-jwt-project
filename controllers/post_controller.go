@@ -13,13 +13,31 @@ import (
 
 func CreatePost(c *gin.Context) {
 	var post models.Post
-	if err := c.ShouldBindJSON(&post); err != nil {
-		utils.SendErrorResponse(c, http.StatusBadRequest, err.Error())
+	// if err := c.ShouldBindJSON(&post); err != nil {
+	// 	utils.SendErrorResponse(c, http.StatusBadRequest, err.Error())
+	// 	return
+	// }
+
+	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+		utils.SendErrorResponse(c, http.StatusBadRequest, "Failed to parse form data")
 		return
 	}
 
+	post.Title = c.Request.FormValue("title")
+	post.Content = c.Request.FormValue("content")
+
 	userID, _ := c.Get("user_id")
 	post.UserID = userID.(uuid.UUID)
+
+	file, _ := c.FormFile("file")
+	if file != nil {
+		fileUrl, err := utils.UploadFile(c, file)
+		if err != nil {
+			utils.SendErrorResponse(c, http.StatusInternalServerError, "Failed to upload file")
+			return
+		}
+		post.FileURL = fileUrl
+	}
 
 	if err := database.DB.Db.Create(&post).Error; err != nil {
 		utils.SendErrorResponse(c, http.StatusInternalServerError, "Failed to create post")
@@ -56,12 +74,34 @@ func UpdatePost(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&post); err != nil {
-		utils.SendErrorResponse(c, http.StatusBadRequest, err.Error())
+	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+		utils.SendErrorResponse(c, http.StatusBadRequest, "Failed to parse form data")
 		return
 	}
 
-	database.DB.Db.Save(&post)
+	// if err := c.ShouldBindJSON(&post); err != nil {
+	// 	utils.SendErrorResponse(c, http.StatusBadRequest, err.Error())
+	// 	return
+	// }
+
+	post.Title = c.Request.FormValue("title")
+	post.Content = c.Request.FormValue("content")
+
+	file, _ := c.FormFile("file")
+	if file != nil {
+		fileUrl, err := utils.UploadFile(c, file)
+		if err != nil {
+			utils.SendErrorResponse(c, http.StatusInternalServerError, "Failed to upload file")
+			return
+		}
+		post.FileURL = fileUrl
+	}
+
+	// database.DB.Db.Save(&post)
+	if err := database.DB.Db.Save(&post); err != nil {
+		utils.SendErrorResponse(c, http.StatusInternalServerError, "Failed to update post")
+		return
+	}
 	utils.SendResponse(c, http.StatusOK, true, "Post updated successfully", post)
 }
 
