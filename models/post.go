@@ -11,6 +11,7 @@ type Post struct {
 	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key"`
 	Title     string         `gorm:"size:255;not null"`
 	Content   string         `gorm:"type:text;not null"`
+	FileURL   string         `gorm:"size:255;" json:"file_url"`
 	UserID    uuid.UUID      `gorm:"type:uuid;not null"`
 	User      User           `gorm:"foreignKey:UserID"`
 	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
