@@ -2,11 +2,9 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -28,23 +26,11 @@ func UploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 
-	// Get base URL from X-Base-URL header
-	baseXURL := c.GetHeader("X-Base-URL")
-	if baseXURL == "" {
-		// Fallback if header is not set
-		scheme := "http"
-		if c.Request.TLS != nil {
-			scheme = "https"
-		}
-		baseXURL = fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+	// Get base URL from context
+	baseURL, exists := c.Get("BaseURL")
+	if !exists {
+		return "", fmt.Errorf("base URL not set in context")
 	}
-
-	// Ensure baseXURL doesn't end with a slash
-	baseXURL = strings.TrimRight(baseXURL, "/")
-	log.Println("baseXURL: ", baseXURL)
-
-	// Get the base URL from environment variable
-	baseURL, _ := c.Get("BaseURL")
 
 	// Return the full URL
 	return fmt.Sprintf("%s/uploads/%s", baseURL, filename), nil
