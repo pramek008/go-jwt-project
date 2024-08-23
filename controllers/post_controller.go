@@ -140,13 +140,23 @@ func ListPosts(c *gin.Context) {
 	// Fetch paginated posts with preload
 	database.DB.Db.Preload("User").Offset(offset).Limit(limit).Find(&posts)
 
-	// Send response
-	// utils.SendResponse(c, http.StatusOK, true, "Posts fetched successfully", gin.H{
-	// 	"page":  page,
-	// 	"limit": limit,
-	// 	"total": total,
-	// 	"posts": posts,
-	// })
+	// Convert posts to PostResponse format
+	postResponses := []models.PostResponse{}
+	for _, post := range posts {
+		postResponse := models.PostResponse{
+			ID:        post.ID,
+			Title:     post.Title,
+			Content:   post.Content,
+			FileURL:   post.FileURL,
+			UserID:    post.UserID,
+			User:      models.UserResponse{ID: post.User.ID, Nickname: post.User.Nickname, Email: post.User.Email, CreatedAt: post.User.CreatedAt, UpdatedAt: post.User.UpdatedAt},
+			CreatedAt: post.CreatedAt,
+			UpdatedAt: post.UpdatedAt,
+			DeletedAt: &post.DeletedAt.Time,
+		}
+		postResponses = append(postResponses, postResponse)
+	}
 
-	utils.SendPaginatedResponse(c, http.StatusOK, true, "Post fetched successfully,", posts, int64(limit), int64(page), total)
+	// Send response with an empty list if no posts were found
+	utils.SendPaginatedResponse(c, http.StatusOK, true, "Post fetched successfully,", postResponses, int64(limit), int64(page), total)
 }
