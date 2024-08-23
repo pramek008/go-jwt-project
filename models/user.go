@@ -8,13 +8,21 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key"`
-	Nickname  string         `gorm:"size:255;not null;unique"`
-	Email     string         `gorm:"size:100;not null;unique"`
-	Password  string         `gorm:"size:100;not null"`
-	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	Nickname  string         `gorm:"size:255;not null;unique" json:"nickname"`
+	Email     string         `gorm:"size:100;not null;unique" json:"email"`
+	Password  string         `gorm:"size:100;not null" json:"-"`
+	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
+}
+
+type UserResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Nickname  string    `json:"nickname"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (User) TableName() string {

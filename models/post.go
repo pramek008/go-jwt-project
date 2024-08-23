@@ -8,15 +8,27 @@ import (
 )
 
 type Post struct {
-	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key"`
-	Title     string         `gorm:"size:255;not null"`
-	Content   string         `gorm:"type:text;not null"`
-	FileURL   string         `gorm:"size:255;" json:"file_url"`
-	UserID    uuid.UUID      `gorm:"type:uuid;not null"`
-	User      User           `gorm:"foreignKey:UserID"`
-	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID        uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id"`
+	Title     string         `gorm:"size:255;not null" json:"title"`
+	Content   string         `gorm:"type:text;not null" json:"content"`
+	FileURL   string         `gorm:"size:255;" json:"fileUrl"`
+	UserID    uuid.UUID      `gorm:"type:uuid;not null" json:"userId"`
+	User      User           `gorm:"foreignKey:UserID" json:"user"`
+	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
+}
+
+type PostResponse struct {
+	ID        uuid.UUID    `json:"id"`
+	Title     string       `json:"title"`
+	Content   string       `json:"content"`
+	FileURL   string       `json:"fileUrl"`
+	UserID    uuid.UUID    `json:"userId"`
+	User      UserResponse `json:"user"` // Use the custom UserResponse struct
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
+	DeletedAt *time.Time   `json:"deletedAt,omitempty"`
 }
 
 func (Post) TableName() string {
