@@ -29,6 +29,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres-db:/var/lib/postgresql/data
+      - ./init-uuid-extension.sql:/docker-entrypoint-initdb.d/init-uuid-extension.sql
     networks:
       - rest-go-jwt
 
