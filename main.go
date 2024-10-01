@@ -33,7 +33,7 @@ func main() {
 	// Start the server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "1500"
 	}
 	r.Run("0.0.0.0:" + port)
 }
