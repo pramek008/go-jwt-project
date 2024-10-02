@@ -20,37 +20,30 @@ func JWTMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		parts := strings.SplitN(authHeader, " ", 2)
-		if !(len(parts) == 2 && parts[0] == "Bearer") {
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == authHeader {
 			utils.SendErrorResponse(c, http.StatusUnauthorized, "Authorization header format must be Bearer {token}")
 			c.Abort()
 			return
 		}
 
-		token, err := utils.ValidateToken(parts[1])
+		userID, err := utils.ExtractUserIDFromToken(tokenString)
 		if err != nil {
 			utils.SendErrorResponse(c, http.StatusUnauthorized, "Invalid or expired token")
 			c.Abort()
 			return
 		}
 
-		if claims, ok := token.Claims.(*utils.Claims); ok && token.Valid {
-			// Periksa apakah token ada di database
-			var storedToken models.Token
-			db := database.DB.Db
-			if err := db.Where("token = ?", parts[1]).First(&storedToken).Error; err != nil {
-				utils.SendErrorResponse(c, http.StatusUnauthorized, "Invalid Token not found")
-				c.Abort()
-				return
-			}
-
-			c.Set("user_id", claims.UserID)
-		} else {
-			utils.SendErrorResponse(c, http.StatusUnauthorized, "Invalid token claims")
+		// Periksa apakah token ada di database
+		var storedToken models.Token
+		db := database.DB.Db
+		if err := db.Where("token = ? AND user_id = ?", tokenString, userID).First(&storedToken).Error; err != nil {
+			utils.SendErrorResponse(c, http.StatusUnauthorized, "Invalid Token not found")
 			c.Abort()
 			return
 		}
 
+		c.Set("user_id", userID)
 		c.Next()
 	}
 }
