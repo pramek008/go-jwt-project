@@ -2,6 +2,7 @@
 package utils
 
 import (
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -10,7 +11,7 @@ import (
 	"github.com/pramek008/go-jwt-project/models"
 )
 
-var jwtKey = []byte("p@ssw0rd")
+var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
 type Claims struct {
 	UserID uuid.UUID `json:"user_id"`
@@ -71,4 +72,22 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
 	}
 
 	return token, nil
+}
+
+func ExtractUserIDFromToken(tokenString string) (uuid.UUID, error) {
+	token, err := ValidateToken(tokenString)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	if !token.Valid {
+		return uuid.Nil, err
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return uuid.Nil, err
+	}
+
+	return claims.UserID, nil
 }
