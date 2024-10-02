@@ -148,7 +148,6 @@ func ListPosts(c *gin.Context) {
 			Title:     post.Title,
 			Content:   post.Content,
 			FileURL:   post.FileURL,
-			UserID:    post.UserID,
 			User:      models.UserResponse{ID: post.User.ID, Nickname: post.User.Nickname, Email: post.User.Email, CreatedAt: post.User.CreatedAt, UpdatedAt: post.User.UpdatedAt},
 			CreatedAt: post.CreatedAt,
 			UpdatedAt: post.UpdatedAt,
