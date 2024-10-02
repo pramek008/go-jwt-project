@@ -24,7 +24,6 @@ type PostResponse struct {
 	Title     string       `json:"title"`
 	Content   string       `json:"content"`
 	FileURL   string       `json:"fileUrl"`
-	UserID    uuid.UUID    `json:"userId"`
 	User      UserResponse `json:"user"` // Use the custom UserResponse struct
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
