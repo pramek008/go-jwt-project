@@ -54,7 +54,7 @@ func ConnectDb() {
 	db.Logger = logger.Default.LogMode(logger.Info)
 
 	log.Println("Running Migrations")
-	err = db.AutoMigrate(&models.User{}, &models.Post{}, &models.Token{})
+	err = db.AutoMigrate(&models.User{}, &models.Post{}, &models.Token{}, &models.TempUser{}, &models.OTP{})
 	if err != nil {
 		log.Fatal("Failed to auto migrate. \n", err)
 		os.Exit(2)
@@ -83,8 +83,8 @@ func seedData(db *gorm.DB) error {
 
 	// Create sample users with UUIDs
 	users := []models.User{
-		{ID: uuid.New(), Nickname: "user1", Email: "user1@example.com", Password: hashPassword("password1")},
-		{ID: uuid.New(), Nickname: "user2", Email: "user2@example.com", Password: hashPassword("password2")},
+		{ID: uuid.New(), Nickname: "user1", Email: "user1@example.com", Password: HashPassword("password1")},
+		{ID: uuid.New(), Nickname: "user2", Email: "user2@example.com", Password: HashPassword("password2")},
 	}
 
 	for _, user := range users {
@@ -113,7 +113,7 @@ func seedData(db *gorm.DB) error {
 	return nil
 }
 
-func hashPassword(password string) string {
+func HashPassword(password string) string {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatalf("Failed to hash password. Error: %v\n", err)
