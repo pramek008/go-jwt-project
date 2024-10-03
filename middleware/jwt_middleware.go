@@ -38,7 +38,7 @@ func JWTMiddleware() gin.HandlerFunc {
 		var storedToken models.Token
 		db := database.DB.Db
 		if err := db.Where("token = ? AND user_id = ?", tokenString, userID).First(&storedToken).Error; err != nil {
-			utils.SendErrorResponse(c, http.StatusUnauthorized, "Invalid Token not found")
+			utils.SendErrorResponse(c, http.StatusUnauthorized, "Unauthorized, Invalid Token not found")
 			c.Abort()
 			return
 		}
