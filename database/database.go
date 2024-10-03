@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,42 +22,83 @@ type Dbinstance struct {
 var DB Dbinstance
 
 func ConnectDb() {
-	dsn := fmt.Sprintf(
+	// First, connect to the default 'postgres' database to create our app's database
+	defaultDSN := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=postgres port=%s sslmode=disable TimeZone=Asia/Jakarta",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_PORT"),
+	)
+
+	defaultDB, err := gorm.Open(postgres.Open(defaultDSN), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err != nil {
+		log.Fatal("Failed to connect to default database: ", err)
+		os.Exit(2)
+	}
+
+	// Create the application database if it doesn't exist
+	dbName := os.Getenv("DB_NAME")
+	err = defaultDB.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName)).Error
+	if err != nil {
+		// If the database already exists, this is not a fatal error
+		if !strings.Contains(err.Error(), "already exists") {
+			log.Fatal("Failed to create database: ", err)
+			os.Exit(2)
+		}
+	}
+
+	// Close the connection to the default database
+	sqlDB, err := defaultDB.DB()
+	if err != nil {
+		log.Fatal("Failed to get database instance: ", err)
+		os.Exit(2)
+	}
+	sqlDB.Close()
+
+	// Now connect to the application database
+	appDSN := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
+		dbName,
 		os.Getenv("DB_PORT"),
 	)
 
-	var err error
 	var db *gorm.DB
-
 	retries := 5
 	for i := 0; i < retries; i++ {
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		db, err = gorm.Open(postgres.Open(appDSN), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Info),
 		})
 		if err == nil {
 			break
 		}
-		log.Printf("Failed to connect to database. Retrying in 5 seconds... (%d/%d)\n", i+1, retries)
+		log.Printf("Failed to connect to application database. Retrying in 5 seconds... (%d/%d)\n", i+1, retries)
 		time.Sleep(5 * time.Second)
 	}
 
 	if err != nil {
-		log.Fatal("Failed to connect to database after multiple retries. \n", err)
+		log.Fatal("Failed to connect to application database after multiple retries: ", err)
 		os.Exit(2)
 	}
 
-	log.Println("Connected to database")
+	log.Println("Connected to application database")
 	db.Logger = logger.Default.LogMode(logger.Info)
+
+	// Ensure UUID extension is created
+	if err := db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"").Error; err != nil {
+		log.Fatal("Failed to create UUID extension: ", err)
+		os.Exit(2)
+	}
 
 	log.Println("Running Migrations")
 	err = db.AutoMigrate(&models.User{}, &models.Post{}, &models.Token{}, &models.TempUser{}, &models.OTP{})
 	if err != nil {
-		log.Fatal("Failed to auto migrate. \n", err)
+		log.Fatal("Failed to auto migrate: ", err)
 		os.Exit(2)
 	}
 	log.Println("Migrations completed")
