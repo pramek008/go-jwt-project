@@ -11,27 +11,27 @@ services:
     volumes:
       - .:/usr/src/app
       - uploaded_files:/usr/src/app/uploads
-    depends_on:
-      - pgsql
+    # depends_on:
+    #   - pgsql
     command: air run main.go
     networks:
-      - rest-go-jwt
       - main_network
+      # - rest-go-jwt
 
-  pgsql:
-    image: postgres:alpine
-    container_name: pgsql
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-db:/var/lib/postgresql/data
-      - ./init-uuid-extension.sql:/docker-entrypoint-initdb.d/init-uuid-extension.sql
-    networks:
-      - rest-go-jwt
+  # pgsql:
+  #   image: postgres:alpine
+  #   container_name: pgsql
+  #   environment:
+  #     - POSTGRES_USER=${DB_USER}
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #     - POSTGRES_DB=${DB_NAME}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-db:/var/lib/postgresql/data
+  #     - ./init-uuid-extension.sql:/docker-entrypoint-initdb.d/init-uuid-extension.sql
+  #   networks:
+  #     - rest-go-jwt
 
 #  cloudbeaver:
 #    image: dbeaver/cloudbeaver:latest
@@ -47,12 +47,12 @@ services:
 #      - rest-go-jwt
 
 volumes:
-  postgres-db:
   uploaded_files:
-#  cloudbeaver:
+  # postgres-db:
+  # cloudbeaver:
 
 networks:
-  rest-go-jwt:
-    driver: bridge
   main_network:
     external: true
+  # rest-go-jwt:
+  #   driver: bridge
